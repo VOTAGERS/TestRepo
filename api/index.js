@@ -20,10 +20,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(expressEjsLayouts);
 app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use('/', AppRoute);
-
+app.set('views', path.join(__dirname, '..', 'views'));
 app.set('view engine', 'ejs');
 app.set('layout', 'layouts/main');
-app.set('views', path.join(__dirname, '../views'));
+
+app.use('/', AppRoute);
 
 export default serverless(app);
