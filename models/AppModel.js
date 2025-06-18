@@ -4,13 +4,13 @@ import { inviteUserToOrg } from "../services/githubService.js";
 export class AppModel {
     static async registUser(data) {
         try {
-            const { name, githubUsername, email, level } = data;
+            const { name, githubUsername, email, stack } = data;
             const newUser = {
                 PersonalName: name,
                 GithubUserName: githubUsername,
                 Email: email,
-                ProfileUrl: 'https://github.com' + githubUsername,
-                Level: level,
+                ProfileUrl: 'https://github.com/' + githubUsername,
+                Stack: stack,
                 Status: 'A',
                 Approval: 'N',
                 DateCreated: new Date()

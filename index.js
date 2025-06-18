@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 import expressEjsLayouts from 'express-ejs-layouts';
 import cors from 'cors';
 import path from 'path';
+import session from 'express-session';
+import flash from 'connect-flash';
 import AppRoute from './routes/AppRoute.js'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -17,6 +19,21 @@ const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: 'secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
+app.use(flash());
+
+// Middleware global untuk view
+app.use((req, res, next) => {
+  res.locals.successMsg = req.flash('success');
+  res.locals.errorMsg = req.flash('error');
+  next();
+});
+
 app.use(expressEjsLayouts);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', AppRoute);

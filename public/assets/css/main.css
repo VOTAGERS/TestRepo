@@ -128,34 +128,37 @@
   }
 }
 
-/* ========= */
+/* ====Neon Form Input===== */
 
-.neon-input {
+.neon-input,
+.neon-input[type="email"],
+.neon-input[type="text"],
+.neon-input[type="password"],
+.neon-input select,
+.neon-input textarea {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  width: 100%;
   background-color: rgba(255, 255, 255, 0.05);
   color: #ffffff;
-  /* Pastikan warna teks terang */
   border: 2px solid rgba(0, 255, 255, 0.3);
   border-radius: 8px;
   padding: 10px 15px;
-  width: 100%;
   transition: all 0.3s ease;
   font-weight: 500;
 }
 
 .neon-input option {
   background-color: #0a0a0a;
-  /* Latar dropdown */
   color: #ffffff;
-  /* Warna teks dalam dropdown */
 }
 
 .neon-input:focus {
   outline: none;
   background-color: rgba(255, 255, 255, 0.08);
   border-color: #00ffff;
+  color: #ffffff;
   box-shadow: 0 0 10px #00ffff80;
 }
 
@@ -382,22 +385,6 @@
   backdrop-filter: blur(12px);
 }
 
-.neon-input {
-  background: transparent;
-  color: #fff;
-  border: 2px solid rgba(0, 255, 255, 0.4);
-  border-radius: 10px;
-  padding: 10px 15px;
-  transition: 0.3s;
-}
-
-.neon-input:focus {
-  outline: none;
-  border-color: #00ffff;
-  box-shadow: 0 0 10px #00ffff;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
 .text-neon {
   color: #00ffff;
   text-shadow: 0 0 10px #00ffff;
@@ -496,23 +483,6 @@
   font-weight: 500;
   margin-bottom: 8px;
   display: block;
-}
-
-.neon-input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 2px solid rgba(0, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 10px 15px;
-  transition: all 0.3s ease;
-}
-
-.neon-input:focus {
-  outline: none;
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: #00ffff;
-  box-shadow: 0 0 10px #00ffff80;
 }
 
 .text-neon {

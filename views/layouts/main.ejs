@@ -30,6 +30,13 @@
         <main class="main">
             <%- body %>
         </main>
+    <!-- Flash message alert (taruh di luar section, dekat akhir body) -->
+    <% if (successMsg && successMsg.length > 0) { %>
+        <script>alert("<%= successMsg %>");</script>
+    <% } %>
+    <% if (errorMsg && errorMsg.length > 0) { %>
+        <script>alert("<%= errorMsg %>");</script>
+    <% } %>
     <%- include('../components/footer.ejs') %>
         <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
             <i class="bi bi-arrow-up-short"></i></a>

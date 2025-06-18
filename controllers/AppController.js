@@ -13,14 +13,13 @@ export class AppController {
     }
     static async Register(req, res) {
         try {
-            const { name, githubUsername, email, level } = req.body;
-            const newUser = await AppModel.registUser({ name, githubUsername, email, level });
+            const { name, githubUsername, email, stack } = req.body;
+            const newUser = await AppModel.registUser({ name, githubUsername, email, stack });
+            req.flash('success', 'Pendaftaran berhasil!');
             return res.redirect('/');
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            req.flash('error', 'Terjadi kesalahan saat mendaftar.');
+            return res.redirect('/');
         }
     }
     // show pending user
