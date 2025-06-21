@@ -4,6 +4,7 @@ import expressEjsLayouts from 'express-ejs-layouts';
 import cors from 'cors';
 import path from 'path';
 import session from 'express-session';
+import passport from './services/githubService.js';
 import flash from 'connect-flash';
 import AppRoute from './routes/AppRoute.js'
 import { fileURLToPath } from 'url';
@@ -21,10 +22,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-  secret: 'secret-key',
+  secret: 'votagers-secret-key',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true, 
+    secure: false, 
+    maxAge: 24 * 60 * 60 * 1000 }
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(flash());
 
 // Middleware global untuk view
