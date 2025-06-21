@@ -25,8 +25,10 @@ export class AppController {
     // show pending user
     static async PendingUserList(req, res) {
         try {
-            const users = await AppModel.pendingUser();
-            res.render('userpending', { users });
+            const { pageCursor } = req.query;
+            const lastDate = pageCursor ? new Date(pageCursor) : null;
+            const { users, lastCursor } = await AppModel.pendingUser(lastDate);
+            res.render('userpending', { users, nextPageCursor: lastCursor ? lastCursor.toISOString() : null });
         } catch (error) {
             res.status(500).json({
                 success: false,

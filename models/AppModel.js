@@ -23,18 +23,22 @@ export class AppModel {
         }
     }
 
-    static async pendingUser() {
+    static async pendingUser(lastCreatedDate = null) {
         try {
-            const snapshot = await db.collection("CommunityUsers")
-                .where("Approval", "==", "A")
+            const query = db.collection("CommunityUsers")
+                .where("Approval", "==", "N")
                 .orderBy("DateCreated", "desc")
-                .get();
+                .limit(10);
 
+            if (lastCreatedDate) query = query.startAfter(lastCreatedDate);
+
+            const snapshot = await query.get();
             const users = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            return users;
+            const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+            return { users, lastCursor: lastVisible?.data().DateCreated?.toDate() ?? null };
         } catch (error) {
             console.error("Error getting pending users:", error);
             throw new Error("Internal Server Error");
