@@ -9,7 +9,7 @@
         <div class="card-header">
             User Status Data
         </div>
-        <div class="card-body text-center" >
+        <div class="card-body" >
             <table class="table table-striped table-datatable" id="userTable">
                 <thead>
                     <tr>
@@ -18,6 +18,7 @@
                         <th>Github Acc</th>
                         <th>Stack</th>
                         <th>Status Approval</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,6 +44,10 @@
                             <% } else { %><span
                                 class="badge bg-secondary">Unknown</span>
                             <% } %>
+                        </td>
+                        <td>
+                            <a href="/dashboard/users/<%= u._id %>/edit" class="btn btn-primary"><i class="bi bi-check-lg"></i></a>
+                            <a href="/dashboard/users/<%= u._id %>/delete" class="btn btn-danger"><i class="bi bi-x-lg"></i></a>
                         </td>
                     </tr>
                     <% }) %>
