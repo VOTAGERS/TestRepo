@@ -43,6 +43,7 @@ passport.serializeUser((user, done) => {
     id: user.id,
     name: user.PersonalName,
     email: user.email,
+    avatar: user.AvatarURL,
     githubUsername: user.GithubUserName
   });
 });
@@ -65,6 +66,7 @@ passport.use(new GithubStrategy({
       return done(null, false, { message: "User belum terdaftar di platform" });
     }
     const userData = snapshot.docs[0].data();
+    userData.AvatarURL = profile.photos?.[0]?.value;
     return done(null, {
       id: snapshot.docs[0].id,
       ...userData
