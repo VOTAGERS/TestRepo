@@ -5,6 +5,7 @@
                 <div class="auth-logo">
                     <a href="/"><img src="/mazer/assets/images/logo/logo.png" alt="Logo"></a>
                 </div>
+                <div id="errorNotification" class="alert alert-danger mb-2" role="alert" style="display: none;"></div>
                 <h1 class="auth-title">Log in.</h1>
                 <form action="index.html">
                     <div class="form-group position-relative has-icon-left mb-4">
@@ -28,18 +29,70 @@
                         <path
                             d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.1 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 4.69c.68.003 1.36.092 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
                     </svg>
-                    <span>Login dengan GitHub</span>
+                    <span>Login using GitHub</span>
                 </a>
                 <div class="text-center mt-5 text-lg fs-4">
-                    <p class="text-gray-600">Don't have an account? <a href="auth-register.html" class="font-bold">Sign
-                            up</a>.</p>
+                    <p class="text-gray-600">For Administrator</p>
                 </div>
             </div>
         </div>
         <div class="col-lg-7 d-none d-lg-block">
             <div id="auth-right">
-
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const errorMsg = `<%= errorMsg %>`;
+        const logoutPromptGithub = `<%= logoutPromptGithub %>`;
+        const notificationDiv = document.getElementById('errorNotification');
+        let githubLogoutLink = null;
+        let messageHtml = '';
+        let alertClass = '';
+        // Prioritas 1: Jika ada error dari OAuth (user tidak terdaftar)
+        if (errorMsg && errorMsg.trim() !== '' && errorMsg.trim() !== 'null') {
+            messageHtml = `
+                <h4><strong>Perhatian!</strong></h4>
+                <p>${errorMsg}</p>
+                <hr>
+                <p class="mb-0">
+                    Jika mengalami kendala atau ingin login dengan akun lain, klik tautan berikut:
+                    <a href="https://github.com/logout" id="githubLogoutLink" target="_blank" rel="noopener noreferrer"><u>Logout dari GitHub</u></a>, lalu coba lagi.
+                </p>
+            `;
+            alertClass = 'alert-danger';
+        }// Prioritas 2: Jika logout dari aplikasi berhasil, tapi perlu prompt logout GitHub 
+        else if (logoutPromptGithub && logoutPromptGithub.trim() === 'true') {
+            messageHtml = `
+                <h4 class="alert-heading">Anda Telah Logout.</h4>
+                <p>Sesi Anda di aplikasi ini telah berakhir.</p>
+                <hr>
+                <p class="mb-0">
+                    Anda dapat <strong>Login menggunakan GitHub</strong> untuk masuk kembali.
+                    <br><br>
+                    Anda juga bisa login dengan akun GitHub yang berbeda, klik tautan berikut:
+                    <a href="https://github.com/logout" id="githubLogoutLink" target="_blank" rel="noopener noreferrer"><u>Logout dari GitHub</u></a>, lalu coba lagi.
+                </p>
+            `;
+            alertClass = 'alert-success';
+        }
+
+        if (messageHtml) {
+            notificationDiv.classList.remove('alert-danger', 'alert-warning', 'alert-info', 'alert-success');
+            notificationDiv.classList.add('alert', alertClass, 'alert-dismissible', 'fade', 'show');
+            notificationDiv.innerHTML = messageHtml + `<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+            notificationDiv.style.display = 'block';
+            githubLogoutLink = document.getElementById('githubLogoutLink');
+            // Dapatkan referensi ke tautan logout GitHub yang baru dibuat
+            if (githubLogoutLink) {
+                githubLogoutLink.addEventListener('click', function(event) {
+                    setTimeout(() => {
+                        window.location.href = '/session';
+                    }, 500);
+                });
+            }
+        }
+    });
+</script>

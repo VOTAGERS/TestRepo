@@ -1,4 +1,5 @@
 import { AppModel } from "../models/AppModel.js";
+import { getGithubUserData } from '../services/githubService.js';
 
 export class AppController {
     static async Index(req, res) {
@@ -42,12 +43,32 @@ export class AppController {
             const { id } = req.params;
             const result = await AppModel.approveUser(id);
             if (!result.success) return res.status(400).send(result.message);
-            return res.redirect('/');
+            return res.redirect('/workspace');
         } catch (error) {
             res.status(500).json({
                 success: false,
                 message: error.message || "Error approving users"
             });
+        }
+    }
+    // github user check
+    static async GithubUserCheck(req, res) {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ success: false, message: 'Username tidak boleh kosong' });
+        try {
+            const result = await getGithubUserData(username);
+            if (!result) return res.status(404).json({ success: false, message: `Username ${username} tidak ditemukan.` });
+            return res.status(200).json({
+                success: true,
+                message: `Username ${username} ditemukan.`,
+                data: {
+                    id: result.id,
+                    username: result.username
+                }
+            });
+        } catch (error) {
+            console.error('Error saat cek user GitHub:', error.message);
+            return res.status(500).json({ success: false, message: 'Terjadi kesalahan saat memeriksa user.' });
         }
     }
 }

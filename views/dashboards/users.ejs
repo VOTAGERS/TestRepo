@@ -9,7 +9,7 @@
         <div class="card-header">
             User Status Data
         </div>
-        <div class="card-body" >
+        <div class="card-body">
             <table class="table table-striped table-datatable" id="userTable">
                 <thead>
                     <tr>
@@ -31,7 +31,10 @@
                             <%= u.Email %>
                         </td>
                         <td>
-                            <%= u.ProfileUrl %>
+                            <a href="<%= u.ProfileUrl %>"
+                                target="_blank" rel="noopener noreferrer">
+                                <%= u.ProfileUrl %>
+                            </a>
                         </td>
                         <td>
                             <%= u.Stack %>
@@ -46,8 +49,16 @@
                             <% } %>
                         </td>
                         <td>
-                            <a href="/dashboard/users/<%= u._id %>/edit" class="btn btn-primary"><i class="bi bi-check-lg"></i></a>
-                            <a href="/dashboard/users/<%= u._id %>/delete" class="btn btn-danger"><i class="bi bi-x-lg"></i></a>
+                            <form method="post">
+                                <button type="submit"
+                                    formaction="/approve/<%= u.id %>"
+                                    class="btn btn-primary"><i
+                                        class="bi bi-check-lg"></i></button>
+                                <button type="submit"
+                                    formaction="/reject/<%= u.id %>"
+                                    class="btn btn-danger"><i
+                                        class="bi bi-x-lg"></i></button>
+                            </form>
                         </td>
                     </tr>
                     <% }) %>
