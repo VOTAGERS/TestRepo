@@ -75,4 +75,16 @@ export class AppModel {
         }
     }
 
+    static async RejectUser(id) {
+        try {
+            const user = await this.getUserById(id);
+            await db.collection("CommunityUsers").doc(id).update({
+                Status: "N"
+            });
+            return { success: true };
+        } catch (error) {
+            console.error("Error rejecting user:", error);
+            return { success: false, message: "Internal Server Error" };
+        }
+    }
 }

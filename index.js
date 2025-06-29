@@ -3,12 +3,11 @@ import { config } from 'dotenv';
 import expressEjsLayouts from 'express-ejs-layouts';
 import cors from 'cors';
 import path from 'path';
-import session from 'express-session';
-import passport from './services/githubService.js';
-import flash from 'connect-flash';
+import { setupSession } from './middleware/sessionMiddleware.js'
 import AppRoute from './routes/AppRoute.js'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import cookieParser from 'cookie-parser';
 
 config();
 
@@ -21,25 +20,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(session({
-  secret: 'votagers-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true, 
-    secure: false, 
-    maxAge: 24 * 60 * 60 * 1000 }
-}));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash());
-
-// Middleware global untuk view
-app.use((req, res, next) => {
-  res.locals.successMsg = req.flash('success');
-  res.locals.errorMsg = req.flash('error');
-  next();
-});
+app.use(cookieParser());
+setupSession(app);
 
 app.use(expressEjsLayouts);
 app.use(express.static(path.join(__dirname, 'public')));
