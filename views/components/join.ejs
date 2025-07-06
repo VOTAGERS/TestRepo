@@ -1,0 +1,122 @@
+<!-- Join Neon Section -->
+<section id="join" class="contact section dark-background-animated text-white">
+    <div class="container section-title" data-aos="fade-up">
+        <h2 class="text-neon">Join VOTAGERS</h2>
+        <p>Gabung dan jadi bagian dari komunitas digital kreatif!</p>
+    </div>
+    <div class="container d-flex justify-content-center" data-aos="zoom-in"
+        data-aos-delay="100">
+        <div class="p-4 neon-card-glass"
+            style="width: 100%; max-width: 600px; border-radius: 20px;">
+            <form method="post" class="neon-form" action="/join">
+                <div class="form-group mb-4">
+                    <label for="name-field"
+                        class="form-label neon-label">Nama</label>
+                    <input type="text" name="name" id="name-field"
+                        class="form-control neon-input" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="email-field"
+                        class="form-label neon-label">Email</label>
+                    <input type="email" name="email" id="email-field"
+                        class="form-control neon-input" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="subject-field"
+                        class="form-label neon-label">Nama Akun Github</label>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <input type="text" name="githubUsername"
+                            id="github-field" class="form-control neon-input me-2"
+                            required style="flex:1 1 auto; min-width: 200px;">
+                        <button class="btn btn-sm neon-button-readmore"
+                            type="button" onclick="searchGithub()">Check
+                            Username</button>
+                    </div>
+
+                    <span id="notif" class="d-none d-block mt-2"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="subject-field"
+                        class="form-label neon-label">Lebih Suka Project
+                        Apa</label>
+                    <select name="stack" id="stack-field"
+                        class="form-control neon-input" required>
+                        <option value="" disabled selected>Pilih salah satu
+                        </option>
+                        <option value="Web App" class="text-white">Web App
+                        </option>
+                        <option value="Android" class="text-white">Android
+                        </option>
+                        <option value="Automation" class="text-white">Machine
+                            Learning</option>
+                    </select>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="submit" class="cyber-btn">Gabung
+                        Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="container text-center mt-5" data-aos="fade-up"
+        data-aos-delay="300">
+        <p class="text-light mb-2">#VOTAGERS #DevCommunity #TechSolution
+            #StartupVibes</p>
+        <p class="fst-italic text-white-50">"Bangun masa depan bareng, satu
+            baris kode dan satu ide keren setiap harinya."</p>
+        <p class="text-white-50 small">GitHub: <a
+                href="https://github.com/votagers" target="_blank"
+                class="text-neon">VOTAGERS</a></p>
+    </div>
+</section>
+
+
+
+
+
+
+
+
+
+<script>
+    async function searchGithub() {
+        const username = document.getElementById("github-field").value.trim();
+        const notif = document.getElementById("notif");
+        // default
+        notif.textContent = '';
+        notif.classList.add('d-none');
+        notif.classList.remove('text-success', 'text-danger', 'ml-3');
+        if (!username) {
+            notif.textContent = 'Masukkan username terlebih dahulu.';
+            notif.classList.remove('d-none');
+            notif.classList.add('text-danger', 'ml-3');
+            return;
+        }
+        try {
+            const response = await fetch('/githubcheck', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                notif.textContent = `✅ ${result.message}`;
+                notif.classList.remove('d-none');
+                notif.classList.add('text-success', 'ml-5');
+            } else {
+                notif.textContent = `❌ ${result.message}`;
+                notif.classList.remove('d-none');
+                notif.classList.add('text-danger', 'ml-5');
+            }
+        } catch (error) {
+            console.error(error);
+            notif.textContent = "Gagal memeriksa GitHub.";
+            notif.classList.remove('d-none');
+            notif.classList.add('text-danger', 'ml-5');
+        }
+    }
+</script>
