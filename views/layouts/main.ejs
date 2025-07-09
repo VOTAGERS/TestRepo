@@ -26,10 +26,19 @@
 </head>
 
 <body class="index-page">
+    <%- include('../components/hero.ejs') %>
     <%- include('../components/header.ejs') %>
-        <main class="main">
+    <%- include('../components/about.ejs') %>
+    <%- include('../components/how.ejs') %>
+    <%- include('../components/benefits.ejs') %>
+    <%- include('../components/work-proccess.ejs') %>
+    <%- include('../components/callToAction.ejs') %>
+    <%- include('../components/join.ejs') %>
+
+    
+    <main class="main">
             <%- body %>
-        </main>
+    </main>
     <!-- Flash message alert (taruh di luar section, dekat akhir body) -->
     <% if (successMsg && successMsg.length > 0) { %>
         <script>alert("<%= successMsg %>");</script>
