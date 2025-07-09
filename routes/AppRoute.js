@@ -18,6 +18,7 @@ router.get('/workspace', (req, res, next) => {
   next();
 }, middleware, AuthMiddleware.Dashboard);
 router.get('/users', middleware, AuthMiddleware.Users);
+router.get('/roles', middleware, AuthMiddleware.Roles);
 
 router.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
 router.get('/auth/github/callback', handleGithubCallback);
