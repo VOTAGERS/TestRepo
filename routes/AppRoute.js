@@ -14,7 +14,6 @@ router.post('/approve/:id', AppController.Approve);
 
 router.get('/session', AuthMiddleware.ensureNotAuthenticated, AuthMiddleware.Login);
 router.get('/workspace', (req, res, next) => {
-  console.log("🔐 Auth status:", req.isAuthenticated(), "User:", req.user);
   next();
 }, middleware, AuthMiddleware.Dashboard);
 router.get('/users', middleware, AuthMiddleware.Users);
