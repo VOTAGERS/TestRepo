@@ -1,0 +1,91 @@
+name: Deploy Express.js App to EC2 via Docker Hub
+
+on:
+  push:
+    branches:
+      - origin-ganes
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # Runner GitHub Actions
+    environment: Dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        
+      - name: Get current date and commit SHA for image tagging
+        id: get_version
+        run: |
+          # Ambil nama Branch
+          RAW_BRANCH_NAME="${{ github.ref_name }}"
+          CLEANED_BRANCH_NAME=$(echo "$RAW_BRANCH_NAME" | sed 's/\//-/g' | tr -cd '[:alnum:]._-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]\+/-/g')
+          
+          if [ -z "$CLEANED_BRANCH_NAME" ]; then
+            CLEANED_BRANCH_NAME="default-branch"
+          fi
+
+          DATE=$(date +%m%d%H%M)
+          SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          
+          IMAGE_TAG="${CLEANED_BRANCH_NAME}-${DATE}-${SHA}"
+          echo "Generated image tag: ${IMAGE_TAG}"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          # EKSPOR SHA JUGA UNTUK DIGUNAKAN DI NAMA CONTAINER JIKA DIINGINKAN
+          echo "SHA=${SHA}" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME_CLEANED=${CLEANED_BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image to Docker Hub
+        env:
+          FULL_IMAGE_NAME: ${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}
+        run: |
+          docker build -t ${{ env.FULL_IMAGE_NAME }} .
+          docker push ${{ env.FULL_IMAGE_NAME }}
+        
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Define image to pull
+            IMAGE_TO_DEPLOY="${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}
+
+            # Nama container spesifik untuk Dev
+            CONTAINER_NAME="express-platforms"
+
+            echo "Stopping and removing old container: ${CONTAINER_NAME}"
+            docker stop ${CONTAINER_NAME} || true
+            docker rm ${CONTAINER_NAME} || true
+
+            echo "Pulling new image: ${IMAGE_TO_DEPLOY}"
+            docker pull ${IMAGE_TO_DEPLOY}
+
+            # Run the new container with all environment variables
+            echo "Running new container: ${CONTAINER_NAME} on port ${{ vars.PORT }}"
+            docker run -d \
+              -p ${{ vars.PORT }}:8000 \
+              --name ${CONTAINER_NAME} \
+              -e NODE_ENV=development \
+              -e ORGS_NAME=${{ vars.ORGS_NAME }} \
+              -e PORT=${{ vars.PORT }} \
+              -e ACC_TOKEN=${{ secrets.ACC_TOKEN }} \
+              -e AUTH_CLIENT_ID=${{ secrets.AUTH_CLIENT_ID }} \
+              -e AUTH_CLIENT_SECRET=${{ secrets.AUTH_CLIENT_SECRET }} \
+              -e AUTH_CLIENT_URL=${{ secrets.AUTH_CLIENT_URL }} \
+              -e FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }} \
+              ${IMAGE_TO_DEPLOY}
+
+            echo "Deployment successful for ${IMAGE_TO_DEPLOY}!"
