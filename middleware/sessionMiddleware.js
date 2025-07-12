@@ -25,13 +25,19 @@ passport.use(new GithubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: process.env.GITHUB_CALLBACK_URL
+
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        const githubUsername = profile.username;
+        const githubUsername = profile.username.toLowerCase();
+        // console.log("GitHub OAuth profile:", profile.username, profile.id);
         // Cek apakah user ada di database kamu
-        const snapshot = await db.collection("CommunityUsers")
-            .where("GithubUserName", "==", githubUsername).limit(1).get();
-        if (snapshot.empty) {
+        const snapshot = await db.collection("CommunityUsers").get();
+        const userDoc = snapshot.docs.find(doc =>
+            (doc.data().GithubUserName || '').toLowerCase() === githubUsername 
+        );
+        
+
+        if (!userDoc) {
             return done(null, false, { message: "Akun Anda belum terdaftar di platform kami." });
         }
         const userData = snapshot.docs[0].data();
