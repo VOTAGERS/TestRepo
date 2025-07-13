@@ -1,4 +1,4 @@
-name: Deploy Express.js App to EC2 via Docker Hub
+name: Deploy Express.js App to EC2 Dev Environment
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest # Runner GitHub Actions
+    runs-on: ubuntu-latest
     environment: Dev
 
     steps:
@@ -28,7 +28,6 @@ jobs:
       - name: Get current date and commit SHA for image tagging
         id: get_version
         run: |
-          # Ambil nama Branch
           RAW_BRANCH_NAME="${{ github.ref_name }}"
           CLEANED_BRANCH_NAME=$(echo "$RAW_BRANCH_NAME" | sed 's/\//-/g' | tr -cd '[:alnum:]._-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]\+/-/g')
           
@@ -42,7 +41,6 @@ jobs:
           IMAGE_TAG="${CLEANED_BRANCH_NAME}-${DATE}-${SHA}"
           echo "Generated image tag: ${IMAGE_TAG}"
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          # EKSPOR SHA JUGA UNTUK DIGUNAKAN DI NAMA CONTAINER JIKA DIINGINKAN
           echo "SHA=${SHA}" >> $GITHUB_OUTPUT
           echo "BRANCH_NAME_CLEANED=${CLEANED_BRANCH_NAME}" >> $GITHUB_OUTPUT
 
@@ -61,31 +59,49 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Define image to pull
-            IMAGE_TO_DEPLOY="${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}
+            TEMP_IMAGE_REF="${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}"
+            IMAGE_TO_DEPLOY=$(echo "$TEMP_IMAGE_REF" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
             # Nama container spesifik untuk Dev
             CONTAINER_NAME="express-platforms"
 
             echo "Stopping and removing old container: ${CONTAINER_NAME}"
-            docker stop ${CONTAINER_NAME} || true
-            docker rm ${CONTAINER_NAME} || true
+            docker stop "${CONTAINER_NAME}" || true
+            docker rm "${CONTAINER_NAME}" || true
 
             echo "Pulling new image: ${IMAGE_TO_DEPLOY}"
-            docker pull ${IMAGE_TO_DEPLOY}
+            docker pull "${IMAGE_TO_DEPLOY}"
+
+            # --- Bersihkan semua Environment Variables ---
+            NODE_ENV_CLEAN=$(echo "development" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            ORGS_NAME_CLEAN=$(echo "${{ vars.ORGS_NAME }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            PORT_CLEAN=$(echo "${{ vars.PORT }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            ACC_TOKEN_CLEAN=$(echo "${{ secrets.ACC_TOKEN }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            AUTH_CLIENT_ID_CLEAN=$(echo "${{ secrets.AUTH_CLIENT_ID }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            AUTH_CLIENT_SECRET_CLEAN=$(echo "${{ secrets.AUTH_CLIENT_SECRET }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            AUTH_CLIENT_URL_CLEAN=$(echo "${{ secrets.AUTH_CLIENT_URL }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            
+            # FIREBASE_SERVICE_ACCOUNT_JSON
+            FIREBASE_JSON_CONTENT="${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}"
+            FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST="/tmp/firebase-credentials-${CLEANED_BRANCH_NAME}-${SHA}.json"
+            echo "$FIREBASE_JSON_CONTENT" | jq -c . > "$FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST"
+            chmod 600 "$FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST"
+            FIREBASE_SERVICE_ACCOUNT_JSON_PATH_CONTAINER="/app/config/firebase-credentials.json"
 
             # Run the new container with all environment variables
-            echo "Running new container: ${CONTAINER_NAME} on port ${{ vars.PORT }}"
+            echo "Running new container: ${CONTAINER_NAME} on port ${PORT_CLEAN}"
             docker run -d \
-              -p ${{ vars.PORT }}:8000 \
-              --name ${CONTAINER_NAME} \
-              -e NODE_ENV=development \
-              -e ORGS_NAME=${{ vars.ORGS_NAME }} \
-              -e PORT=${{ vars.PORT }} \
-              -e ACC_TOKEN=${{ secrets.ACC_TOKEN }} \
-              -e AUTH_CLIENT_ID=${{ secrets.AUTH_CLIENT_ID }} \
-              -e AUTH_CLIENT_SECRET=${{ secrets.AUTH_CLIENT_SECRET }} \
-              -e AUTH_CLIENT_URL=${{ secrets.AUTH_CLIENT_URL }} \
-              -e FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }} \
-              ${IMAGE_TO_DEPLOY}
+              -p "${PORT_CLEAN}":8000 \
+              --name "${CONTAINER_NAME}" \
+              -e NODE_ENV="${NODE_ENV_CLEAN}" \
+              -e ORGS_NAME="${ORGS_NAME_CLEAN}" \
+              -e PORT="${PORT_CLEAN}" \
+              -e ACC_TOKEN="${ACC_TOKEN_CLEAN}" \
+              -e AUTH_CLIENT_ID="${AUTH_CLIENT_ID_CLEAN}" \
+              -e AUTH_CLIENT_SECRET="${AUTH_CLIENT_SECRET_CLEAN}" \
+              -e AUTH_CLIENT_URL="${AUTH_CLIENT_URL_CLEAN}" \
+              -e FIREBASE_SERVICE_ACCOUNT_JSON_PATH="${FIREBASE_SERVICE_ACCOUNT_JSON_PATH_CONTAINER}" \
+              -v "${FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST}":"${FIREBASE_SERVICE_ACCOUNT_JSON_PATH_CONTAINER}":ro \
+              "${IMAGE_TO_DEPLOY}"
 
             echo "Deployment successful for ${IMAGE_TO_DEPLOY}!"
