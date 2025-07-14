@@ -13,6 +13,7 @@ export class AppModel {
                 Stack: stack,
                 Status: 'A',
                 Approval: 'N',
+                Role: 'member',
                 DateCreated: new Date()
             };
             const docRef = await db.collection("CommunityUsers").add(newUser);
