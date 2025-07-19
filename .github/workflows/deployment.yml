@@ -60,11 +60,11 @@ jobs:
               --restart=always \
               "${{ inputs.image_tag }}"
 
-      - name: Discord Notification
-        uses: Ilshidur/action-discord@master
+      - name: Discord Notification (Success)
+        uses: discord-actions/send-message@v1
         if: success()
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
           message: |
             🚀 **Deploy Sukses**
             🔹 Image: `${{ inputs.image_tag }}`
@@ -73,10 +73,10 @@ jobs:
             🔹 Env: `Dev`
 
       - name: Discord Notification (Failure)
+        uses: discord-actions/send-message@v1
         if: failure()
-        uses: Ilshidur/action-discord@master
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
           message: |
             ❌ **Deploy Gagal**
             🔹 Image: `${{ inputs.image_tag }}`
