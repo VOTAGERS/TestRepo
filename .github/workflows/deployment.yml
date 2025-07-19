@@ -59,27 +59,4 @@ jobs:
               -e FIREBASE_SERVICE_ACCOUNT_JSON="${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" \
               --restart=always \
               "${{ inputs.image_tag }}"
-
-      - name: Discord Notification (Success)
-        uses: discord-actions/send-message@v1
-        if: success()
-        with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
-          message: |
-            🚀 **Deploy Sukses**
-            🔹 Image: `${{ inputs.image_tag }}`
-            🔹 Container: `${{ inputs.container_name }}`
-            🔹 Branch: `${{ github.ref_name }}`
-            🔹 Env: `Dev`
-
-      - name: Discord Notification (Failure)
-        uses: discord-actions/send-message@v1
-        if: failure()
-        with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
-          message: |
-            ❌ **Deploy Gagal**
-            🔹 Image: `${{ inputs.image_tag }}`
-            🔹 Container: `${{ inputs.container_name }}`
-            🔹 Branch: `${{ github.ref_name }}`
-            🔹 Env: `Dev`
+            echo "Deployment completed successfully."
