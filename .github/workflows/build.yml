@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: Dev
     outputs:
       image_tag: ${{ steps.meta.outputs.IMAGE_TAG }}
       container_name: ${{ steps.meta.outputs.CONTAINER_NAME }}
