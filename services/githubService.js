@@ -3,8 +3,8 @@ import { config } from 'dotenv';
 import { passport } from '../middleware/sessionMiddleware.js';
 config();
 
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
-const ORG_NAME = process.env.GITHUB_ORG
+const octokit = new Octokit({ auth: process.env.ACC_TOKEN })
+const ORG_NAME = process.env.ORGS_NAME
 
 // === FUNGSI GITHUB API ===
 export async function getGithubUserData(username) {

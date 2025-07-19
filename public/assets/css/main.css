@@ -185,7 +185,7 @@
 
 .dark-background-animated {
   /* Background image cyberpunk */
-  background: url('/assets/img/bg/bg-hero3.jpg') no-repeat center center fixed,
+  background: url('/assets/img/bg/bg-hero.webp') no-repeat center center fixed,
     radial-gradient(circle at 20% 20%, #1a1a2e 0%, #0f0f2e 100%);
   background-size: cover;
   animation: bgAnimate 20s ease infinite;

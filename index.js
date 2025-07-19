@@ -8,6 +8,7 @@ import AppRoute from './routes/AppRoute.js'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
 
 config();
 
@@ -15,22 +16,34 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT;
+// var morgan = require('morgan');
+
+// Middleware setup
+// app.use(morgan('combined')); // Logging middleware
+
+
+var logger = morgan('combined');
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
+
+// Setup session management 
 setupSession(app);
 
 app.use(expressEjsLayouts);
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(logger);
 app.use('/', AppRoute);
 
 app.set('view engine', 'ejs');
 app.set('layout', 'layouts/main');
-app.set('views', path.join(__dirname, 'views'));
+// app.set('views', path.join(__dirname, 'views'));
+
 
 app.listen(PORT, () => {
+    console.log('🔧 Server is starting...');
     console.log(`Express running Apps on http://localhost:${PORT}`);
 });
