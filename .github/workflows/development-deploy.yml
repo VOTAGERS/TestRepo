@@ -1,23 +1,19 @@
-name: Deploy Express.js App to EC2 Dev Environment
+name: Deploy Platforms App
 
 on:
-  push:
-    branches:
-      - origin-ganes
+  # push:
+  #   branches:
+  #     - 'origin-*'
+  #     - '!main'
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     environment: Dev
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -28,42 +24,68 @@ jobs:
       - name: Get current date and commit SHA for image tagging
         id: get_version
         run: |
-          RAW_BRANCH_NAME="${{ github.ref_name }}"
-          CLEANED_BRANCH_NAME=$(echo "$RAW_BRANCH_NAME" | sed 's/\//-/g' | tr -cd '[:alnum:]._-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]\+/-/g')
-          
+          CLEANED_BRANCH_NAME=$(echo "${{ github.ref_name }}" | sed 's/\//-/g' | tr -cd '[:alnum:]._-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]\+/-/g')
           if [ -z "$CLEANED_BRANCH_NAME" ]; then
             CLEANED_BRANCH_NAME="default-branch"
           fi
-
           DATE=$(date +%m%d%H%M)
           SHA=$(echo ${{ github.sha }} | cut -c1-7)
           
           IMAGE_TAG="${CLEANED_BRANCH_NAME}-${DATE}-${SHA}"
-          echo "Generated image tag: ${IMAGE_TAG}"
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "SHA=${SHA}" >> $GITHUB_OUTPUT
-          echo "BRANCH_NAME_CLEANED=${CLEANED_BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "Generated image tag: ${IMAGE_TAG}"
+          echo "Current branch: ${{ github.ref_name }}"
 
       - name: Build and push Docker image to Docker Hub
-        env:
-          FULL_IMAGE_NAME: ${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}
         run: |
-          docker build -t ${{ env.FULL_IMAGE_NAME }} .
-          docker push ${{ env.FULL_IMAGE_NAME }}
-        
-      - name: Deploy to EC2
+          IMAGE_NAME="${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}"
+          echo "Building image: $IMAGE_NAME"
+          docker build -t "$IMAGE_NAME" .
+          docker push "$IMAGE_NAME"
+          echo "${IMAGE_NAME}" > image_to_deploy.txt
+      
+      - name: Upload image tag artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag
+          path: image_to_deploy.txt
+  
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: Dev
+    steps:
+      - name: Download image tag artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-tag
+          path: .
+
+      - name: Read check image tag
+        id: read_image
+        run: |
+          IMAGE=$(cat image_to_deploy.txt | tr -d '\n\r' | xargs)
+          if [ -z "$IMAGE" ]; then
+            echo "❌ ERROR: IMAGE_TO_DEPLOY is empty!"
+            exit 1
+          fi
+          echo "✅ IMAGE_TO_DEPLOY read: $IMAGE"
+          echo "IMAGE_TO_DEPLOY=$IMAGE" >> $GITHUB_ENV
+          echo "IMAGE_TO_DEPLOY=$IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TO_DEPLOY: ${{ env.IMAGE_TO_DEPLOY }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: IMAGE_TO_DEPLOY,FIREBASE_SERVICE_ACCOUNT_JSON
           script: |
-            # Define image to pull
-            TEMP_IMAGE_REF="${{ secrets.DOCKER_REPO }}:${{ steps.get_version.outputs.IMAGE_TAG }}"
-            IMAGE_TO_DEPLOY=$(echo "$TEMP_IMAGE_REF" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-            # Nama container spesifik untuk Dev
-            CONTAINER_NAME="express-platforms"
+            echo "Starting deployment on EC2..."
+            CONTAINER_NAME="votagers-platforms"
 
             echo "Stopping and removing old container: ${CONTAINER_NAME}"
             docker stop "${CONTAINER_NAME}" || true
@@ -80,18 +102,11 @@ jobs:
             AUTH_CLIENT_ID_CLEAN=$(echo "${{ secrets.AUTH_CLIENT_ID }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             AUTH_CLIENT_SECRET_CLEAN=$(echo "${{ secrets.AUTH_CLIENT_SECRET }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             AUTH_CLIENT_URL_CLEAN=$(echo "${{ secrets.AUTH_CLIENT_URL }}" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-            
-            # FIREBASE_SERVICE_ACCOUNT_JSON
-            FIREBASE_JSON_CONTENT="${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}"
-            FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST="/tmp/firebase-credentials-${CLEANED_BRANCH_NAME}-${SHA}.json"
-            echo "$FIREBASE_JSON_CONTENT" | jq -c . > "$FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST"
-            chmod 600 "$FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST"
-            FIREBASE_SERVICE_ACCOUNT_JSON_PATH_CONTAINER="/app/config/firebase-credentials.json"
 
-            # Run the new container with all environment variables
-            echo "Running new container: ${CONTAINER_NAME} on port ${PORT_CLEAN}"
+            ESCAPED_JSON=$(printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" | sed ':a;N;$!ba;s/\n/\\n/g')
+            echo "Starting new container with image: ${IMAGE_TO_DEPLOY}"
             docker run -d \
-              -p "${PORT_CLEAN}":8000 \
+              -p "${PORT_CLEAN}":8570 \
               --name "${CONTAINER_NAME}" \
               -e NODE_ENV="${NODE_ENV_CLEAN}" \
               -e ORGS_NAME="${ORGS_NAME_CLEAN}" \
@@ -100,8 +115,10 @@ jobs:
               -e AUTH_CLIENT_ID="${AUTH_CLIENT_ID_CLEAN}" \
               -e AUTH_CLIENT_SECRET="${AUTH_CLIENT_SECRET_CLEAN}" \
               -e AUTH_CLIENT_URL="${AUTH_CLIENT_URL_CLEAN}" \
-              -e FIREBASE_SERVICE_ACCOUNT_JSON_PATH="${FIREBASE_SERVICE_ACCOUNT_JSON_PATH_CONTAINER}" \
-              -v "${FIREBASE_SERVICE_ACCOUNT_JSON_PATH_HOST}":"${FIREBASE_SERVICE_ACCOUNT_JSON_PATH_CONTAINER}":ro \
+              -e FIREBASE_SERVICE_ACCOUNT_JSON="${ESCAPED_JSON}" \
+              --restart=always \
               "${IMAGE_TO_DEPLOY}"
 
-            echo "Deployment successful for ${IMAGE_TO_DEPLOY}!"
+            echo "Deployment successful for ${IMAGE_TO_DEPLOY}! New container: ${CONTAINER_NAME} on port ${PORT_CLEAN}"
+            docker image prune -f
+            echo "Old images pruned."
