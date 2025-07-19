@@ -1,5 +1,5 @@
 name: Deploy Platforms App
-
+#InActive
 on:
   # push:
   #   branches:

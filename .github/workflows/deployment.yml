@@ -1,0 +1,85 @@
+# .github/workflows/deploy.yml
+name: Deploy Image
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      container_name:
+        required: true
+        type: string
+    secrets:
+      SSH_PRIVATE_KEY:
+        required: true
+      EC2_HOST:
+        required: true
+      EC2_USERNAME:
+        required: true
+      FIREBASE_SERVICE_ACCOUNT_JSON:
+        required: true
+      ACC_TOKEN:
+        required: true
+      AUTH_CLIENT_ID:
+        required: true
+      AUTH_CLIENT_SECRET:
+        required: true
+      AUTH_CLIENT_URL:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Dev
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            CONTAINER_NAME="${{ inputs.container_name }}"
+
+            docker stop "${CONTAINER_NAME}" || true
+            docker rm "${CONTAINER_NAME}" || true
+            docker pull "${{ inputs.image_tag }}"
+
+            docker run -d \
+              -p 8080:${{ vars.PORT }} \
+              --name "${CONTAINER_NAME}" \
+              -e NODE_ENV=development \
+              -e ORGS_NAME="${{ vars.ORGS_NAME }}" \
+              -e PORT="${{ vars.PORT }}" \
+              -e ACC_TOKEN="${{ secrets.ACC_TOKEN }}" \
+              -e AUTH_CLIENT_ID="${{ secrets.AUTH_CLIENT_ID }}" \
+              -e AUTH_CLIENT_SECRET="${{ secrets.AUTH_CLIENT_SECRET }}" \
+              -e AUTH_CLIENT_URL="${{ secrets.AUTH_CLIENT_URL }}" \
+              -e FIREBASE_SERVICE_ACCOUNT_JSON="${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" \
+              --restart=always \
+              "${{ inputs.image_tag }}"
+
+      - name: Discord Notification
+        uses: Ilshidur/action-discord@master
+        if: success()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
+          message: |
+            🚀 **Deploy Sukses**
+            🔹 Image: `${{ inputs.image_tag }}`
+            🔹 Container: `${{ inputs.container_name }}`
+            🔹 Branch: `${{ github.ref_name }}`
+            🔹 Env: `Dev`
+
+      - name: Discord Notification (Failure)
+        if: failure()
+        uses: Ilshidur/action-discord@master
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
+          message: |
+            ❌ **Deploy Gagal**
+            🔹 Image: `${{ inputs.image_tag }}`
+            🔹 Container: `${{ inputs.container_name }}`
+            🔹 Branch: `${{ github.ref_name }}`
+            🔹 Env: `Dev`
