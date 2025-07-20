@@ -43,7 +43,7 @@ app.set('layout', 'layouts/main');
 // app.set('views', path.join(__dirname, 'views'));
 
 
-app.listen(PORT, () => {
+app.listen(PORT,'0.0.0.0', () => {
     console.log('🔧 Server is starting...');
     console.log(`Express running Apps on http://localhost:${PORT}`);
 });
