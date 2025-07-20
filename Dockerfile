@@ -1,9 +1,9 @@
 # Gunakan base image Node.js
-FROM node:20-slim
+FROM node:24.1.0-slim
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
-RUN npm install --production
+RUN npm install --omit=dev
+RUN npm audit fix --force
 COPY . .
 EXPOSE 8570
-CMD [ "npm", "start" ]
+CMD [ "node", "index.js" ]

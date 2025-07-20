@@ -1,0 +1,69 @@
+# .github/workflows/deploy.yml
+name: Deploy Image
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      container_name:
+        required: true
+        type: string
+    secrets:
+      SSH_PRIVATE_KEY:
+        required: true
+      EC2_HOST:
+        required: true
+      EC2_USERNAME:
+        required: true
+      FIREBASE_SERVICE_ACCOUNT_JSON:
+        required: true
+      ACC_TOKEN:
+        required: true
+      AUTH_CLIENT_ID:
+        required: true
+      AUTH_CLIENT_SECRET:
+        required: true
+      AUTH_CLIENT_URL:
+        required: true
+      DOCKER_REPO:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Dev
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            CONTAINER_NAME="${{ inputs.container_name }}"
+            IMAGE_TAG="${{ secrets.DOCKER_REPO }}:${{ inputs.image_tag }}"
+
+            docker stop "${CONTAINER_NAME}" || true
+            docker rm "${CONTAINER_NAME}" || true
+            docker pull "${IMAGE_TAG}"
+
+            docker run -d \
+              -p 8080:${{ vars.PORT }} \
+              --network tunnel \
+              --name "${CONTAINER_NAME}" \
+              -e NODE_ENV=development \
+              -e ORGS_NAME="${{ vars.ORGS_NAME }}" \
+              -e PORT="${{ vars.PORT }}" \
+              -e ACC_TOKEN="${{ secrets.ACC_TOKEN }}" \
+              -e AUTH_CLIENT_ID="${{ secrets.AUTH_CLIENT_ID }}" \
+              -e AUTH_CLIENT_SECRET="${{ secrets.AUTH_CLIENT_SECRET }}" \
+              -e AUTH_CLIENT_URL="${{ secrets.AUTH_CLIENT_URL }}" \
+              -e FIREBASE_SERVICE_ACCOUNT_JSON="${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" \
+              --restart unless-stopped \
+              "${IMAGE_TAG}"
+            echo "Deployment completed successfully."
+
+            docker image prune -f
+            echo "Old images pruned."
