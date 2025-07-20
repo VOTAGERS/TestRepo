@@ -16,11 +16,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT;
-// var morgan = require('morgan');
-
-// Middleware setup
-// app.use(morgan('combined')); // Logging middleware
-
 
 var logger = morgan('combined');
 
@@ -40,8 +35,6 @@ app.use('/', AppRoute);
 
 app.set('view engine', 'ejs');
 app.set('layout', 'layouts/main');
-// app.set('views', path.join(__dirname, 'views'));
-
 
 app.listen(PORT,'0.0.0.0', () => {
     console.log('🔧 Server is starting...');
