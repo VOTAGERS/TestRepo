@@ -38,7 +38,7 @@ jobs:
           echo "IMAGE_TAG=${TAG}" >> $GITHUB_OUTPUT
           echo "CONTAINER_NAME=${CONTAINER_NAME}" >> $GITHUB_OUTPUT
 
-          echo "Generated: IMAGE_TAG=${IMAGE_TAG}"
+          echo "Generated: IMAGE_TAG=${TAG}"
           echo "Generated: CONTAINER_NAME=${CONTAINER_NAME}"
 
       - name: Build and Push Docker Image
@@ -48,7 +48,7 @@ jobs:
           docker push "${FULL_IMAGE}"
         env:
           DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
-          IMAGE_TAG: ${{ steps.meta.outputs.IMAGE_TAG }}
+          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
 
   call-deploy:
     needs: build
