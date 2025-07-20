@@ -18,7 +18,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Docker Login
         uses: docker/login-action@v3
         with:
@@ -34,22 +33,21 @@ jobs:
 
           TAG="${BRANCH}-${DATE}-${SHA}"
           CONTAINER_NAME="votagers-${BRANCH}"
-          IMAGE_TAG="${DOCKER_REPO}:${TAG}"
 
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${TAG}" >> $GITHUB_OUTPUT
           echo "CONTAINER_NAME=${CONTAINER_NAME}" >> $GITHUB_OUTPUT
 
-          echo "Generated: IMAGE_TAG=${IMAGE_TAG}"
+          echo "Generated: IMAGE_TAG=${TAG}"
           echo "Generated: CONTAINER_NAME=${CONTAINER_NAME}"
+
+      - name: Build and Push to Docker Hub
+        run: |
+          FULL_IMAGE="${DOCKER_REPO}:${IMAGE_TAG}"
+          docker build -t "${FULL_IMAGE}" .
+          docker push "${FULL_IMAGE}"
         env:
           DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
-
-      - name: Build and Push Docker Image
-        run: |
-          docker build -t "${{ env.IMAGE_TAG }}" .
-          docker push "${{ env.IMAGE_TAG }}"
-        env:
-          IMAGE_TAG: ${{ steps.meta.outputs.IMAGE_TAG }}
+          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
 
   call-deploy:
     needs: build
@@ -66,3 +64,4 @@ jobs:
       AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
       AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
       AUTH_CLIENT_URL: ${{ secrets.AUTH_CLIENT_URL }}
+      DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
