@@ -14,8 +14,8 @@ export class AppController {
     }
     static async Register(req, res) {
         try {
-            const { name, githubUsername, email, stack } = req.body;
-            const newUser = await AppModel.registUser({ name, githubUsername, email, stack });
+            const { name, githubUsername, discordId, email, stack } = req.body;
+            const newUser = await AppModel.registUser({ name, githubUsername, discordId, email, stack });
             req.flash('success', 'Pendaftaran berhasil!');
             return res.redirect('/');
         } catch (error) {
