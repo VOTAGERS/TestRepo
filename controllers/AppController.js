@@ -51,6 +51,20 @@ export class AppController {
             });
         }
     }
+    // reject
+    static async Reject(req, res) {
+        try {
+            const { id } = req.params;
+            const result = await AppModel.rejectUser(id);
+            if (!result.success) return res.status(400).send(result.message);
+            return res.redirect('/workspace');
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message || "Error approving users"
+            });
+        }
+    }
     // github user check
     static async GithubUserCheck(req, res) {
         const { username } = req.body;
