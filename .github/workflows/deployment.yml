@@ -48,7 +48,7 @@ jobs:
     environment:
       name: ${{ inputs.environment }}
     env:
-      NODE_ENV: ${{ inputs.node_env != "" && inputs.node_env || (inputs.environment == 'Production' && 'production' || 'development') }}
+      NODE_ENV: ${{ inputs.node_env || (inputs.environment == 'Production' && 'production' || 'development') }}
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
