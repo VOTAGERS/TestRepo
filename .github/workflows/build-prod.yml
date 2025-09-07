@@ -1,0 +1,85 @@
+# .github/workflows/build-prod.yml
+name: Build Production Workflow
+
+on:
+   merge_group:
+      types: [checks_requested]
+   workflow_dispatch:
+
+jobs:
+   guard:
+      runs-on: ubuntu-latest
+      outputs:
+         ok: ${{ steps.gate.outputs.ok }}
+      steps:
+         - id: gate
+           run: |
+               if [ "${{ github.event.merge_group.base_ref }}" = "refs/heads/main" ]; then
+                  echo "ok=true" >> $GITHUB_OUTPUT
+               else
+                  echo "ok=false" >> $GITHUB_OUTPUT
+               fi
+   build:
+      needs: guard
+      if: ${{ needs.guard.outputs.ok == 'true' || github.event_name == 'workflow_dispatch' }}
+      runs-on: ubuntu-latest
+      environment: Production
+      outputs:
+         branch_name: ${{ steps.meta.outputs.BRANCH_NAME }}
+         image_tag: ${{ steps.meta.outputs.IMAGE_TAG }}
+         container_name: ${{ steps.meta.outputs.CONTAINER_NAME }}
+      steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+         - name: Docker Login
+           uses: docker/login-action@v3
+           with:
+              username: ${{ secrets.DOCKER_USERNAME }}
+              password: ${{ secrets.DOCKER_PASSWORD }}
+
+         - name: Generate Image Tag and Container Name
+           id: meta
+           run: |
+              DATE=$(date +%m%d%H%M)
+              SHA=$(echo ${{ github.event.merge_group.head_sha || github.sha }} | cut -c1-5)
+              BRANCH="main"
+
+              TAG="${BRANCH}-${DATE}-${SHA}"
+              CONTAINER_NAME="votagers-${BRANCH}"
+
+              echo "BRANCH_NAME=${BRANCH}" >> $GITHUB_OUTPUT
+              echo "IMAGE_TAG=${TAG}" >> $GITHUB_OUTPUT
+              echo "CONTAINER_NAME=${CONTAINER_NAME}" >> $GITHUB_OUTPUT
+
+              echo "Generated: BRANCH_NAME=${BRANCH}"
+              echo "Generated: IMAGE_TAG=${TAG}"
+              echo "Generated: CONTAINER_NAME=${CONTAINER_NAME}"
+
+         - name: Build and Push to Docker Hub
+           run: |
+              FULL_IMAGE="${DOCKER_REPO}:${IMAGE_TAG}"
+              docker build -t "${FULL_IMAGE}" .
+              docker push "${FULL_IMAGE}"
+           env:
+              DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+              IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
+   call-deploy:
+      needs: build
+      if: ${{ needs.guard.outputs.ok == 'true' || github.event_name == 'workflow_dispatch' }}
+      uses: ./.github/workflows/deployment.yml
+      with:
+         environment: Production
+         node_env: production
+         branch_name: ${{ needs.build.outputs.branch_name }}
+         image_tag: ${{ needs.build.outputs.image_tag }}
+         container_name: ${{ needs.build.outputs.container_name }}
+      secrets:
+         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+         EC2_HOST: ${{ secrets.EC2_HOST }}
+         EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+         FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+         ACC_TOKEN: ${{ secrets.ACC_TOKEN }}
+         AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
+         AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
+         AUTH_CLIENT_URL: ${{ secrets.AUTH_CLIENT_URL }}
+         DOCKER_REPO: ${{ secrets.DOCKER_REPO }}

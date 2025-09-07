@@ -1,9 +1,13 @@
-# .github/workflows/deploy.yml
+# .github/workflows/deployment.yml
 name: Deploy Image
 
 on:
   workflow_call:
     inputs:
+      environment:
+        description: 'Github environment name'
+        required: true
+        type: string
       branch_name:
         required: true
         type: string
@@ -13,6 +17,11 @@ on:
       container_name:
         required: true
         type: string
+      node_env:
+        description: 'Node environment variable'
+        required: false
+        type: string
+        default: ""
     secrets:
       SSH_PRIVATE_KEY:
         required: true
@@ -36,7 +45,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: Dev
+    environment:
+      name: ${{ inputs.environment }}
+    env:
+      NODE_ENV: ${{ inputs.node_env != "" && inputs.node_env || (inputs.environment == 'Production' && 'production' || 'development') }}
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -73,7 +85,7 @@ jobs:
               --network tunnel \
               --name "${CONTAINER_NAME}" \
               --restart unless-stopped \
-              -e NODE_ENV=development \
+              -e NODE_ENV="${{ env.NODE_ENV }}" \
               -e ORGS_NAME="${{ vars.ORGS_NAME }}" \
               -e PORT="${{ vars.PORT }}" \
               -e ACC_TOKEN="${{ secrets.ACC_TOKEN }}" \

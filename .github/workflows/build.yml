@@ -56,6 +56,8 @@ jobs:
     needs: build
     uses: ./.github/workflows/deployment.yml
     with:
+      environment: Dev
+      node_env: development
       branch_name: ${{ needs.build.outputs.branch_name }}
       image_tag: ${{ needs.build.outputs.image_tag }}
       container_name: ${{ needs.build.outputs.container_name }}
