@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Dev
     outputs:
+      branch_name: ${{ steps.meta.outputs.BRANCH_NAME }}
       image_tag: ${{ steps.meta.outputs.IMAGE_TAG }}
       container_name: ${{ steps.meta.outputs.CONTAINER_NAME }}
     steps:
@@ -34,9 +35,11 @@ jobs:
           TAG="${BRANCH}-${DATE}-${SHA}"
           CONTAINER_NAME="votagers-${BRANCH}"
 
+          echo "BRANCH_NAME=${BRANCH}" >> $GITHUB_OUTPUT
           echo "IMAGE_TAG=${TAG}" >> $GITHUB_OUTPUT
           echo "CONTAINER_NAME=${CONTAINER_NAME}" >> $GITHUB_OUTPUT
 
+          echo "Generated: BRANCH_NAME=${BRANCH}"
           echo "Generated: IMAGE_TAG=${TAG}"
           echo "Generated: CONTAINER_NAME=${CONTAINER_NAME}"
 
@@ -53,6 +56,9 @@ jobs:
     needs: build
     uses: ./.github/workflows/deployment.yml
     with:
+      environment: Dev
+      node_env: development
+      branch_name: ${{ needs.build.outputs.branch_name }}
       image_tag: ${{ needs.build.outputs.image_tag }}
       container_name: ${{ needs.build.outputs.container_name }}
     secrets:

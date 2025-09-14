@@ -11,6 +11,7 @@ router.get('/', AppController.Index);
 router.post('/join', AppController.Register);
 router.post('/githubcheck', AppController.GithubUserCheck);
 router.post('/approve/:id', AppController.Approve);
+router.post('/reject/:id', AppController.Reject);
 
 router.get('/session', AuthMiddleware.ensureNotAuthenticated, AuthMiddleware.Login);
 router.get('/workspace', (req, res, next) => {

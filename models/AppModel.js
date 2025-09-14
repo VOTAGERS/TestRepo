@@ -4,11 +4,12 @@ import { inviteUserToOrg } from "../services/githubService.js";
 export class AppModel {
     static async registUser(data) {
         try {
-            const { name, githubUsername, email, stack } = data;
+            const { name, githubUsername, discordId, email, stack } = data;
             const newUser = {
                 PersonalName: name,
                 GithubUserName: githubUsername,
                 Email: email,
+                DiscordId: discordId,
                 ProfileUrl: 'https://github.com/' + githubUsername,
                 Stack: stack,
                 Status: 'A',
@@ -28,6 +29,7 @@ export class AppModel {
         try {
             const query = db.collection("CommunityUsers")
                 .where("Approval", "==", "N")
+                .where("Status", "==", "A")
                 .orderBy("DateCreated", "desc")
                 .limit(10);
 
@@ -59,7 +61,7 @@ export class AppModel {
 
     static async approveUser(id) {
         try {
-            const user = await this.getUserById(id);
+            const user = await this.getUser(id);
             if (!user) return { success: false, message: "User tidak ditemukan" };
 
             const result = await inviteUserToOrg(user.GithubUserName);
@@ -76,9 +78,9 @@ export class AppModel {
         }
     }
 
-    static async RejectUser(id) {
+    static async rejectUser(id) {
         try {
-            const user = await this.getUserById(id);
+            const user = await this.getUser(id);
             await db.collection("CommunityUsers").doc(id).update({
                 Status: "N"
             });

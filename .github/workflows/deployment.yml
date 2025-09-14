@@ -1,15 +1,27 @@
-# .github/workflows/deploy.yml
+# .github/workflows/deployment.yml
 name: Deploy Image
 
 on:
   workflow_call:
     inputs:
+      environment:
+        description: 'Github environment name'
+        required: true
+        type: string
+      branch_name:
+        required: true
+        type: string
       image_tag:
         required: true
         type: string
       container_name:
         required: true
         type: string
+      node_env:
+        description: 'Node environment variable'
+        required: false
+        type: string
+        default: ""
     secrets:
       SSH_PRIVATE_KEY:
         required: true
@@ -33,7 +45,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: Dev
+    environment:
+      name: ${{ inputs.environment }}
+    env:
+      NODE_ENV: ${{ inputs.node_env || (inputs.environment == 'Production' && 'production' || 'development') }}
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -44,24 +59,40 @@ jobs:
           script: |
             CONTAINER_NAME="${{ inputs.container_name }}"
             IMAGE_TAG="${{ secrets.DOCKER_REPO }}:${{ inputs.image_tag }}"
+            IMAGE_EXISTING_PREFIX="${{ secrets.DOCKER_REPO}}:${{ inputs.branch_name }}-"
+
+            docker images --format "{{.Repository}}:{{.Tag}}" | \
+            grep "^${IMAGE_EXISTING_PREFIX}" | \
+            xargs -r docker rmi || true
+            echo "Old images removed."
 
             docker stop "${CONTAINER_NAME}" || true
             docker rm "${CONTAINER_NAME}" || true
             docker pull "${IMAGE_TAG}"
+            
+            # Generate random port antara 5000 dan 8500
+            while :
+            do
+              PORT_HOST=$(( ( RANDOM % 3500 ) + 5000 ))
+              if ! ss -tuln | grep -q ":$PORT_HOST "; then
+                break
+              fi
+            done
+            echo "Random available port selected: $PORT_HOST"
 
             docker run -d \
-              -p 8080:${{ vars.PORT }} \
+              -p ${PORT_HOST}:${{ vars.PORT }} \
               --network tunnel \
               --name "${CONTAINER_NAME}" \
-              -e NODE_ENV=development \
+              --restart unless-stopped \
+              -e NODE_ENV="${{ env.NODE_ENV }}" \
               -e ORGS_NAME="${{ vars.ORGS_NAME }}" \
               -e PORT="${{ vars.PORT }}" \
               -e ACC_TOKEN="${{ secrets.ACC_TOKEN }}" \
               -e AUTH_CLIENT_ID="${{ secrets.AUTH_CLIENT_ID }}" \
               -e AUTH_CLIENT_SECRET="${{ secrets.AUTH_CLIENT_SECRET }}" \
               -e AUTH_CLIENT_URL="${{ secrets.AUTH_CLIENT_URL }}" \
-              -e FIREBASE_SERVICE_ACCOUNT_JSON="${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" \
-              --restart unless-stopped \
+              -e FIREBASE_SERVICE_ACCOUNT_JSON="$(echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' | jq -c .)" \
               "${IMAGE_TAG}"
             echo "Deployment completed successfully."
 
