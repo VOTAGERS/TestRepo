@@ -1,4 +1,5 @@
 import { AppModel } from "../models/AppModel.js";
+import { getGithubUserDetailFromDB } from "../services/githubService.js";
 
 export class AuthMiddleware {
     static async ensureAuthenticated(req, res, next) {
@@ -7,9 +8,7 @@ export class AuthMiddleware {
     }
 
     static async ensureNotAuthenticated(req, res, next) {
-        if (req.isAuthenticated()) {
-            return res.redirect('/workspace'); // atau redirect ke dashboard
-        }
+        if (req.isAuthenticated()) return res.redirect('/workspace'); // atau redirect ke dashboard
         return next();
     }
 
@@ -54,7 +53,7 @@ export class AuthMiddleware {
         if (errorMsg) res.clearCookie('oauth_error', { path: '/' });
         if (logoutPromptGithub) res.clearCookie('logout_prompt_github', { path: '/' });
         res.render('dashboards/login', {
-            layout: 'layouts/dashboard',
+            layout: 'layouts/login',  // Gunakan layout login mazer
             title: 'Login',
             isAuth: true,
             errorMsg,
@@ -64,26 +63,44 @@ export class AuthMiddleware {
 
     static async Dashboard(req, res) {
         try {
+            // Ambil data profil lengkap dari NetUserDetail berdasarkan username dari session
+            const githubUsername = req.user.githubUsername || req.user.GithubUserName;
+            let userDetail = null;
+            if (githubUsername) userDetail = await getGithubUserDetailFromDB(githubUsername);
+            const userData = {
+                ...req.user,
+                ...userDetail
+            };
             res.render('dashboards/index', {
                 layout: 'layouts/dashboard',
                 title: 'Dashboard',
                 isAuth: false,
-                user: req.user
+                user: userData
             });
         } catch (error) {
-            console.error("Error fetching pending users:", error);
+            console.error("Error in Dashboard:", error);
             res.status(500).json({ error: "Internal Server Error" });
         }
     }
 
     static async Users(req, res) {
         try {
+            // Ambil data profil lengkap dari NetUserDetail berdasarkan username dari session
+            const githubUsername = req.user.githubUsername || req.user.GithubUserName;
+            let userDetail = null;
+
+            if (githubUsername) userDetail = await getGithubUserDetailFromDB(githubUsername);
+            // Gabungkan data dari session dengan data dari NetUserDetail
+            const userData = {
+                ...req.user,
+                ...userDetail
+            };
             const { users, lastCursor } = await AppModel.pendingUser();
             res.render('dashboards/users', {
                 layout: 'layouts/dashboard',
                 title: 'User Management',
                 isAuth: false,
-                user: req.user,
+                user: userData,
                 users,
                 nextPageCursor: lastCursor ? lastCursor.toISOString() : null
             });
@@ -94,12 +111,22 @@ export class AuthMiddleware {
     }
     static async Roles(req, res) {
         try {
+            // Ambil data profil lengkap dari NetUserDetail berdasarkan username dari session
+            const githubUsername = req.user.githubUsername || req.user.GithubUserName;
+            let userDetail = null;
+
+            if (githubUsername) userDetail = await getGithubUserDetailFromDB(githubUsername);
+            // Gabungkan data dari session dengan data dari NetUserDetail
+            const userData = {
+                ...req.user,
+                ...userDetail
+            };
             // const { users, lastCursor } = await AppModel.pendingUser();
             res.render('dashboards/roles', {
                 layout: 'layouts/dashboard',
                 title: 'Role Management',
                 isAuth: false,
-                user: req.user,
+                user: userData,
                 // users,
                 // nextPageCursor: lastCursor ? lastCursor.toISOString() : null
             });

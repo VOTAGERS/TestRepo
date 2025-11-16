@@ -1,42 +1,47 @@
-<div id="sidebar" class="active">
-    <div class="sidebar-wrapper active">
-        <div class="sidebar-header">
-            <div class="d-flex justify-content-between">
-                <div class="logo">
-                    <a href="/workspace"><img src="/mazer/assets/images/logo/logo.png" alt="Logo" srcset=""></a>
-                </div>
-                <div class="toggler">
-                    <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="sidebar-menu">
-            <ul class="menu">
-                <li class="sidebar-title">Menu</li>
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <div class="app-brand demo">
+    <a href="/workspace" class="app-brand-link">
+      <span class="app-brand-text demo menu-text fw-bolder ms-2">VOTAGERS</span>
+    </a>
 
-                <li class="sidebar-item active ">
-                    <a href="/workspace" class='sidebar-link'>
-                        <i class="bi bi-grid-fill"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+      <i class="bi bi-chevron-left align-middle"></i>
+    </a>
+  </div>
 
-                <li class="sidebar-title">Pages</li>
+  <div class="menu-inner-shadow"></div>
 
-                <li class="sidebar-item  ">
-                    <a href="/users" class='sidebar-link'>
-                        <i class="bi bi-people-fill"></i>
-                        <span>User Management</span>
-                    </a>
-                </li>
-                <li class="sidebar-item  ">
-                    <a href="/roles" class='sidebar-link'>
-                        <i class="bi bi-people-fill"></i>
-                        <span>Role Management</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <button class="sidebar-toggler btn x"><i data-feather="x"></i></button>
-    </div>
-</div>
+  <ul class="menu-inner py-1">
+    <!-- Dashboard -->
+    <li class="menu-item active">
+      <a href="/workspace" class="menu-link">
+        <i class="menu-icon tf-icons bi bi-house-door"></i>
+        <div data-i18n="Analytics">Dashboard</div>
+      </a>
+    </li>
+
+    <!-- Admin Menu -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bi bi-gear"></i>
+        <div data-i18n="Layouts">Admin Menu</div>
+      </a>
+
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="/users" class="menu-link">
+            <i class="menu-icon tf-icons bi bi-people"></i>
+            <div data-i18n="Without menu">User Management</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="/roles" class="menu-link">
+            <i class="menu-icon tf-icons bi bi-shield-lock"></i>
+            <div data-i18n="Without navbar">Role Management</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</aside>
+<!-- / Menu -->
