@@ -23,4 +23,8 @@ router.get('/roles', middleware, AuthMiddleware.Roles);
 router.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
 router.get('/auth/github/callback', handleGithubCallback);
 router.get('/logout', AuthMiddleware.Logout);
+
+// user detail
+router.get('/api/users/:username/detail', AppController.UserDetail);
+
 export default router;

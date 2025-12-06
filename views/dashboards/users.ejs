@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/mazer/assets/vendors/simple-datatables/style.css">
 <div class="col-12 col-md-6 order-md-1 order-last">
     <h3>
         <%= title %>
@@ -10,65 +11,123 @@
             User Status Data
         </div>
         <div class="card-body">
-            <table class="table table-bordered table-datatable text-center" id="userTable">
+            <table class="table table-bordered table-striped text-center overflow-x-scroll" id="userTable">
                 <thead class="table-dark">
                     <tr>
-                        <th class="text-center">Name</th>
-                        <th class="text-center">Email</th>
-                        <th class="text-center">Github Acc</th>
-                        <th class="text-center">Stack</th>
-                        <th class="text-center">Status Approval</th>
-                        <th class="text-center">Action</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Github</th>
+                        <th>Stack</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% users.forEach((u, i) => { %>
-                    <tr>
-                        <td class="text-center">
-                            <%= u.PersonalName %>
-                        </td>
-                        <td class="text-center">
-                            <%= u.Email %>
-                        </td>
-                        <td class="text-center">
-                            <a href="<%= u.ProfileUrl %>"
-                                target="_blank" rel="noopener noreferrer">
-                                <%= u.ProfileUrl %>
-                            </a>
-                        </td>
-                        <td class="text-center">
-                            <%= u.Stack %>
-                        </td>
-                        <td class="text-center">
-                            <% if (u.Approval === 'Y') { %><span
-                                class="badge bg-success">Verified</span>
-                            <% } else if (u.Approval === 'N') { %>
-                            <span class="badge bg-warning">Unverified</span>
-                            <% } else { %><span
-                                class="badge bg-secondary">Unknown</span>
-                            <% } %>
-                        </td>
-                        <td class="text-center">
-                            <form method="post">
-                                <button type="submit"
-                                    formaction="/approve/<%= u.id %>"
-                                    class="btn btn-success"><i
-                                        class="bi bi-check-lg"></i></button>
-                                <button type="submit"
-                                    formaction="/reject/<%= u.id %>"
-                                    class="btn btn-danger"><i
-                                        class="bi bi-x-lg"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    <% }) %>
+                    <% users.forEach((u, i)=> { %>
+                        <tr>
+                            <td>
+                                <%= u.PersonalName %>
+                            </td>
+                            <td>
+                                <%= u.Email %>
+                            </td>
+                            <td>
+                                <a href="<%= u.ProfileUrl %>" target="_blank" rel="noopener noreferrer">
+                                    <%= u.ProfileUrl %>
+                                </a>
+                            </td>
+                            <td>
+                                <%= u.Stack %>
+                            </td>
+                            <td>
+                                <% if (u.Approval==='Y' ) { %><span class="badge bg-success">Verified</span>
+                                    <% } else if (u.Approval==='N' ) { %>
+                                        <span class="badge bg-warning">Unverified</span>
+                                        <% } else { %><span class="badge bg-secondary">Unknown</span>
+                                            <% } %>
+                            </td>
+                            <td class="d-flex justify-content-center gap-1">
+                                <form method="post" class="d-inline">
+                                    <button type="submit" formaction="/approve/<%= u.id %>" class="btn btn-success btn-sm"><i
+                                            class="bi bi-check"></i></button>
+                                    <button type="submit" formaction="/reject/<%= u.id %>" class="btn btn-danger btn-sm"><i
+                                            class="bi bi-x"></i></button>
+                                </form>
+                                <button type="button" onclick="showUserDetail('<%= u.GithubUserName %>')"
+                                    class="btn btn-info btn-sm">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <% }) %>
                 </tbody>
             </table>
         </div>
     </div>
 </section>
 
+<!-- Modal untuk menampilkan detail user -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailModalLabel">User Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="userDetailContent">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/mazer/assets/vendors/simple-datatables/simple-datatables.js"></script>
 <script>
-    let usertable = document.querySelector('#userTable');
-    let dataTable = new simpleDatatables.DataTable(usertable);
+    // Inisialisasi DataTables
+    const dataTable = new simpleDatatables.DataTable(document.getElementById("userTable"), {
+        perPage: 10,
+        perPageSelect: [5, 10, 15, 20, 25]
+    });
+
+    function showUserDetail(username) {
+        fetch(`/api/users/${username}/detail`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.data;
+                    const detailContent = `
+                        <div class="row">
+                            <div class="col-md-4 ">
+                                <img src="${user.avatar_url || '/assets/img/default-avatar.png'}"
+                                     class="img-fluid rounded-circle mb-3"
+                                     style="width: 150px; height: 150px; object-fit: cover;"
+                                     alt="${user.username}">
+                                <h5>${user.name || user.username}</h5>
+                                <p class="text-muted">@${user.username}</p>
+                                <a href="${user.profile_url}" target="_blank" class="btn btn-primary">
+                                    <i class="bi bi-github"></i> View Profile
+                                </a>
+                            </div>
+                            <div class="col-md-8">
+                                <h6>Information</h6>
+                                <table class="table table-borderless">
+                                    <tr><td><strong>Email:</strong></td><td>${user.email || 'Not provided'}</td></tr>
+                                    <tr><td><strong>Name:</strong></td><td>${user.name || 'Not provided'}</td></tr>
+                                    <tr><td><strong>GitHub URL:</strong></td><td><a href="${user.profile_url}" target="_blank">${user.profile_url}</a></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('userDetailContent').innerHTML = detailContent;
+                    new bootstrap.Modal(document.getElementById('userDetailModal')).show();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user detail:', error);
+                alert('Error fetching user detail');
+            });
+    }
 </script>

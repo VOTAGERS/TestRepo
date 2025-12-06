@@ -13,7 +13,7 @@
 
   <ul class="menu-inner py-1">
     <!-- Dashboard -->
-    <li class="menu-item active">
+    <li class="menu-item <%= req && req.path === '/workspace' ? 'active' : '' %>">
       <a href="/workspace" class="menu-link">
         <i class="menu-icon tf-icons bi bi-house-door"></i>
         <div data-i18n="Analytics">Dashboard</div>
@@ -21,20 +21,20 @@
     </li>
 
     <!-- Admin Menu -->
-    <li class="menu-item">
+    <li class="menu-item <%= req && (req.path === '/users' || req.path === '/roles') ? 'active open' : '' %>">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons bi bi-gear"></i>
         <div data-i18n="Layouts">Admin Menu</div>
       </a>
 
       <ul class="menu-sub">
-        <li class="menu-item">
+        <li class="menu-item <%= req && req.path === '/users' ? 'active' : '' %>">
           <a href="/users" class="menu-link">
             <i class="menu-icon tf-icons bi bi-people"></i>
             <div data-i18n="Without menu">User Management</div>
           </a>
         </li>
-        <li class="menu-item">
+        <li class="menu-item <%= req && req.path === '/roles' ? 'active' : '' %>">
           <a href="/roles" class="menu-link">
             <i class="menu-icon tf-icons bi bi-shield-lock"></i>
             <div data-i18n="Without navbar">Role Management</div>
@@ -43,5 +43,23 @@
       </ul>
     </li>
   </ul>
+
+  <style>
+    /* Tambahkan styling khusus untuk menu aktif dengan prioritas tinggi */
+    .menu-item.active > .menu-link {
+      background-color: rgba(13, 110, 253, 0.1) !important; /* Warna latar belakang saat aktif */
+      color: #3d8bfd !important; /* Warna teks saat aktif */
+    }
+
+    .menu-item.active.open > .menu-link {
+      background-color: rgba(13, 110, 253, 0.15) !important; /* Warna sedikit lebih gelap untuk menu terbuka */
+    }
+
+    /* Styling untuk submenu aktif */
+    .menu-sub .menu-item.active > .menu-link {
+      background-color: rgba(13, 110, 253, 0.15) !important;
+      color: #3d8bfd !important;
+    }
+  </style>
 </aside>
 <!-- / Menu -->
