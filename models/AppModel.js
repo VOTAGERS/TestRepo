@@ -90,4 +90,15 @@ export class AppModel {
             return { success: false, message: "Internal Server Error" };
         }
     }
+
+    static async getUserDetail(username) {
+        try {
+            const userDoc = await db.collection("NetUserDetail").doc(username.toLowerCase()).get();
+            if (!userDoc.exists) return null;
+            return { id: userDoc.id, ...userDoc.data() };
+        } catch (error) {
+            console.error("Error getting user detail:", error);
+            throw new Error("Internal Server Error");
+        }
+    }
 }

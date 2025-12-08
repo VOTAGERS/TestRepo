@@ -85,4 +85,28 @@ export class AppController {
             return res.status(500).json({ success: false, message: 'Terjadi kesalahan saat memeriksa user.' });
         }
     }
+
+    // user detail
+    static async UserDetail(req, res) {
+        try {
+            const { username } = req.params;
+            const userDetail = await AppModel.getUserDetail(username);
+            if (!userDetail) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Detail user ${username} tidak ditemukan.`
+                });
+            }
+            res.status(200).json({
+                success: true,
+                data: userDetail
+            });
+        } catch (error) {
+            console.error('Error getting user detail:', error.message);
+            res.status(500).json({
+                success: false,
+                message: error.message || "Error getting user detail"
+            });
+        }
+    }
 }

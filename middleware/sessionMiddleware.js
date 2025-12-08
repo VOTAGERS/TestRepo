@@ -3,6 +3,7 @@ import flash from 'connect-flash';
 import passport from "passport";
 import { Strategy as GithubStrategy } from "passport-github2";
 import { db } from '../services/firebaseService.js';
+import { saveGithubProfileToNetUserDetail } from '../services/githubService.js';
 import { config } from 'dotenv';
 config();
 
@@ -29,21 +30,19 @@ passport.use(new GithubStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         const githubUsername = profile.username.toLowerCase();
-        // console.log("GitHub OAuth profile:", profile.username, profile.id);
+        // Simpan profil GitHub ke NetUserDetail collection sebelum melanjutkan
+        await saveGithubProfileToNetUserDetail(profile);
         // Cek apakah user ada di database kamu
         const snapshot = await db.collection("CommunityUsers").get();
         const userDoc = snapshot.docs.find(doc =>
-            (doc.data().GithubUserName || '').toLowerCase() === githubUsername 
+            (doc.data().GithubUserName || '').toLowerCase() === githubUsername
         );
-        
 
-        if (!userDoc) {
-            return done(null, false, { message: "Akun Anda belum terdaftar di platform kami." });
-        }
-        const userData = snapshot.docs[0].data();
+        if (!userDoc) return done(null, false, { message: "Akun Anda belum terdaftar di platform kami." });
+        const userData = userDoc.data(); // Gunakan userDoc yang benar, bukan snapshot.docs[0]
         userData.AvatarURL = profile.photos?.[0]?.value;
         return done(null, {
-            id: snapshot.docs[0].id,
+            id: userDoc.id,
             ...userData
         });
 

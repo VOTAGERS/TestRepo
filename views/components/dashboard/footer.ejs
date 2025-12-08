@@ -1,8 +1,25 @@
-<footer>
-    <div class="footer clearfix mb-0 text-muted">
-        <div class="float-start"></div>
-        <div class="float-end">
-            <p>2025 &copy; VOTAGERS</p>
-        </div>
+<!-- Content wrapper -->
+<div class="content-wrapper">
+  <!-- Content -->
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <%- body %>
+  </div>
+  <!-- / Content -->
+
+  <!-- Footer -->
+  <footer class="content-footer footer bg-footer-theme">
+    <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+      <div class="mb-2 mb-md-0">
+        © <script>document.write(new Date().getFullYear());</script> VOTAGERS — Build with ❤️ by Devs, for Devs.
+      </div>
+      <div>
+        <a href="https://github.com/votagers" target="_blank" class="footer-link me-4">GitHub</a>
+        <a href="mailto:contact@votagers.org" class="footer-link me-4">Contact</a>
+      </div>
     </div>
-</footer>
+  </footer>
+  <!-- / Footer -->
+
+  <div class="content-backdrop fade"></div>
+</div>
+<!-- Content wrapper -->

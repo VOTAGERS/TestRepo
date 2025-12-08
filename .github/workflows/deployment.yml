@@ -82,7 +82,7 @@ jobs:
 
             docker run -d \
               -p ${PORT_HOST}:${{ vars.PORT }} \
-              --network tunnel \
+              --network ${{ vars.DEFAULT_NETWORK }} \
               --name "${CONTAINER_NAME}" \
               --restart unless-stopped \
               -e NODE_ENV="${{ env.NODE_ENV }}" \

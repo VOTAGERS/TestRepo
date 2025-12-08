@@ -31,6 +31,13 @@ setupSession(app);
 app.use(expressEjsLayouts);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(logger);
+
+// Middleware to provide current route to all views
+app.use((req, res, next) => {
+    res.locals.req = req;
+    next();
+});
+
 app.use('/', AppRoute);
 
 app.set('view engine', 'ejs');
