@@ -109,30 +109,4 @@ export class AuthMiddleware {
             res.status(500).json({ error: "Internal Server Error" });
         }
     }
-    static async Roles(req, res) {
-        try {
-            // Ambil data profil lengkap dari NetUserDetail berdasarkan username dari session
-            const githubUsername = req.user.githubUsername || req.user.GithubUserName;
-            let userDetail = null;
-
-            if (githubUsername) userDetail = await getGithubUserDetailFromDB(githubUsername);
-            // Gabungkan data dari session dengan data dari NetUserDetail
-            const userData = {
-                ...req.user,
-                ...userDetail
-            };
-            // const { users, lastCursor } = await AppModel.pendingUser();
-            res.render('dashboards/roles', {
-                layout: 'layouts/dashboard',
-                title: 'Role Management',
-                isAuth: false,
-                user: userData,
-                // users,
-                // nextPageCursor: lastCursor ? lastCursor.toISOString() : null
-            });
-        } catch (error) {
-            console.error("Error fetching users:", error);
-            res.status(500).json({ error: "Internal Server Error" });
-        }
-    }
 }
