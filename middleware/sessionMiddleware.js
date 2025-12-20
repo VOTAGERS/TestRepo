@@ -14,13 +14,25 @@ passport.serializeUser((user, done) => {
         name: user.PersonalName,
         email: user.email,
         avatar: user.AvatarURL,
-        githubUsername: user.GithubUserName
+        githubUsername: user.GithubUserName,
+        role: user.Role // Save role to session
     });
 });
 
 passport.deserializeUser((obj, done) => {
     done(null, obj);
 });
+
+// ... (existing GithubStrategy code) ...
+
+// === ADMIN MIDDLEWARE ===
+export function ensureAdmin(req, res, next) {
+    if (req.isAuthenticated() && req.user.role === 'admin') {
+        return next();
+    }
+    // Jika user belum login atau role bukan admin
+    res.status(403).send("You Dont Have Access");
+}
 
 passport.use(new GithubStrategy({
     clientID: process.env.AUTH_CLIENT_ID,

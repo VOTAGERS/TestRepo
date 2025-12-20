@@ -1,70 +1,81 @@
 <link rel="stylesheet" href="/mazer/assets/vendors/simple-datatables/style.css">
-<div class="col-12 col-md-6 order-md-1 order-last">
-    <h3>
-        <%= title %>
-    </h3>
-</div>
-
-<section class="section">
-    <div class="card">
-        <div class="card-header">
-            User Status Data
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped text-center overflow-x-scroll" id="userTable">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Github</th>
-                        <th>Stack</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% users.forEach((u, i)=> { %>
-                        <tr>
-                            <td>
-                                <%= u.PersonalName %>
-                            </td>
-                            <td>
-                                <%= u.Email %>
-                            </td>
-                            <td>
-                                <a href="<%= u.ProfileUrl %>" target="_blank" rel="noopener noreferrer">
-                                    <%= u.ProfileUrl %>
-                                </a>
-                            </td>
-                            <td>
-                                <%= u.Stack %>
-                            </td>
-                            <td>
-                                <% if (u.Approval==='Y' ) { %><span class="badge bg-success">Verified</span>
-                                    <% } else if (u.Approval==='N' ) { %>
-                                        <span class="badge bg-warning">Unverified</span>
-                                        <% } else { %><span class="badge bg-secondary">Unknown</span>
-                                            <% } %>
-                            </td>
-                            <td class="d-flex justify-content-center gap-1">
-                                <!-- <form method="post" class="d-inline">
-                                    <button type="submit" formaction="/approve/<%= u.id %>" class="btn btn-success btn-sm"><i
-                                            class="bi bi-check"></i></button>
-                                    <button type="submit" formaction="/reject/<%= u.id %>" class="btn btn-danger btn-sm"><i
-                                            class="bi bi-x"></i></button>
-                                </form> -->
-                                <button type="button" onclick="showUserDetail('<%= u.GithubUserName %>')"
-                                    class="btn btn-info btn-sm">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <% }) %>
-                </tbody>
-            </table>
+<div class="page-heading">
+    <div class="page-title">
+        <div class="row">
+            <div class="col-12 col-md-6 order-md-1 order-last">
+                <h3>
+                    <%= title %>
+                </h3>
+                <p class="text-subtitle text-muted">Manage system users and their verification status.</p>
+            </div>
+            <div class="col-12 col-md-6 order-md-2 order-first">
+                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/workspace">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Users</li>
+                    </ol>
+                </nav>
+            </div>
         </div>
     </div>
-</section>
+
+    <section class="section">
+        <div class="card">
+            <div class="card-header">
+                User Status Data
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center" id="userTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Github</th>
+                                <th>Stack</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% users.forEach((u, i)=> { %>
+                                <tr>
+                                    <td>
+                                        <%= u.PersonalName %>
+                                    </td>
+                                    <td>
+                                        <%= u.Email %>
+                                    </td>
+                                    <td>
+                                        <a href="<%= u.ProfileUrl %>" target="_blank" rel="noopener noreferrer">
+                                            <%= u.ProfileUrl %>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <%= u.Stack %>
+                                    </td>
+                                    <td>
+                                        <% if (u.Approval==='Y' ) { %><span class="badge bg-success">Verified</span>
+                                            <% } else if (u.Approval==='N' ) { %>
+                                                <span class="badge bg-warning">Unverified</span>
+                                                <% } else { %><span class="badge bg-secondary">Unknown</span>
+                                                    <% } %>
+                                    </td>
+                                    <td class="d-flex justify-content-center gap-1">
+                                        <button type="button" onclick="showUserDetail('<%= u.GithubUserName %>')"
+                                            class="btn btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 
 <!-- Modal untuk menampilkan detail user -->
 <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
